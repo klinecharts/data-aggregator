@@ -1,0 +1,48 @@
+{
+  "name": "@klinecharts/data-aggregator",
+  "version": "0.0.0",
+  "description": "Data aggregation utilities for KLineCharts.",
+  "keywords": [
+    "candlestick",
+    "kline",
+    "klinecharts",
+    "ohlcv",
+    "trading"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "biome:check": "biome check .",
+    "build": "bun run scripts/build.ts",
+    "check": "bun run biome:check && bun run typecheck && bun test",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "prepublishOnly": "bun run check && bun run build",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "packageManager": "bun@1.2.22",
+  "devDependencies": {
+    "@biomejs/biome": "2.5.4",
+    "@types/bun": "latest",
+    "typescript": "latest"
+  }
+}
