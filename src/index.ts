@@ -6,5 +6,7 @@ export type {
   KLineData,
   Period,
   PeriodType,
-  TradeData
+  TradeData,
+  TradingCalendar,
+  TradingSession
 } from './types.js'
