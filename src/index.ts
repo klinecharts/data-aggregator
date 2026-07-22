@@ -1,5 +1,5 @@
-export { DataAggregator } from './DataAggregator.js'
-export { getPeriodStart } from './period.js'
+export { DataAggregator } from './DataAggregator'
+export { getPeriodStart } from './period'
 export type {
   AggregationResult,
   DataAggregatorOptions,
@@ -9,4 +9,4 @@ export type {
   TradeData,
   TradingCalendar,
   TradingSession
-} from './types.js'
+} from './types'

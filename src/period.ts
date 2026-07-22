@@ -1,4 +1,4 @@
-import type { Period, PeriodType } from './types.js'
+import type { Period, PeriodType } from './types'
 
 const MILLISECONDS: Record<Exclude<PeriodType, 'month' | 'year'>, number> = {
   second: 1_000,

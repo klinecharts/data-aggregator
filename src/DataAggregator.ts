@@ -1,7 +1,7 @@
-import { getPeriodStart, validatePeriod, validateUtcOffset } from './period.js'
-import type { NormalizedTradingCalendar, NormalizedTradingSession } from './sessions.js'
-import { getSessionPeriodStart, normalizeTradingCalendar, normalizeTradingSessions } from './sessions.js'
-import type { AggregationResult, DataAggregatorOptions, KLineData, Period, TradeData } from './types.js'
+import { getPeriodStart, validatePeriod, validateUtcOffset } from './period'
+import type { NormalizedTradingCalendar, NormalizedTradingSession } from './sessions'
+import { getSessionPeriodStart, normalizeTradingCalendar, normalizeTradingSessions } from './sessions'
+import type { AggregationResult, DataAggregatorOptions, KLineData, Period, TradeData } from './types'
 
 const MINUTE = 60_000
 const DAY = 24 * 60 * MINUTE
@@ -9,8 +9,9 @@ const DAY = 24 * 60 * MINUTE
 export class DataAggregator {
   private period: Period | undefined
   private readonly utcOffsetMinutes: number
-  private readonly mergeMinuteKLinesAcrossTradingDays: boolean
-  private readonly mergeHourKLinesAcrossTradingDays: boolean
+  private readonly mergeSecondAcrossTradingDay: boolean
+  private readonly mergeMinuteAcrossTradingDay: boolean
+  private readonly mergeHourAcrossTradingDay: boolean
   private readonly sessions: readonly NormalizedTradingSession[] | undefined
   private readonly tradingCalendar: NormalizedTradingCalendar
   private currentData: KLineData | undefined
@@ -19,12 +20,14 @@ export class DataAggregator {
   constructor(options: DataAggregatorOptions = {}) {
     const utcOffsetMinutes = options.utcOffsetMinutes ?? 0
     validateUtcOffset(utcOffsetMinutes)
-    validateBooleanOption(options.mergeMinuteKLinesAcrossTradingDays, 'mergeMinuteKLinesAcrossTradingDays')
-    validateBooleanOption(options.mergeHourKLinesAcrossTradingDays, 'mergeHourKLinesAcrossTradingDays')
+    validateBooleanOption(options.mergeSecondAcrossTradingDay, 'mergeSecondAcrossTradingDay')
+    validateBooleanOption(options.mergeMinuteAcrossTradingDay, 'mergeMinuteAcrossTradingDay')
+    validateBooleanOption(options.mergeHourAcrossTradingDay, 'mergeHourAcrossTradingDay')
 
     this.utcOffsetMinutes = utcOffsetMinutes
-    this.mergeMinuteKLinesAcrossTradingDays = options.mergeMinuteKLinesAcrossTradingDays ?? false
-    this.mergeHourKLinesAcrossTradingDays = options.mergeHourKLinesAcrossTradingDays ?? false
+    this.mergeSecondAcrossTradingDay = options.mergeSecondAcrossTradingDay ?? false
+    this.mergeMinuteAcrossTradingDay = options.mergeMinuteAcrossTradingDay ?? false
+    this.mergeHourAcrossTradingDay = options.mergeHourAcrossTradingDay ?? false
     this.sessions = options.sessions === undefined ? undefined : normalizeTradingSessions(options.sessions)
     if (options.tradingCalendar !== undefined && this.sessions === undefined) {
       throw new RangeError('tradingCalendar requires sessions')
@@ -100,15 +103,15 @@ export class DataAggregator {
     if (this.period === undefined) {
       throw new Error('period must be set before adding trades')
     }
-    const mergeAcrossTradingDays = (this.period.type === 'minute' && this.mergeMinuteKLinesAcrossTradingDays) || (this.period.type === 'hour' && this.mergeHourKLinesAcrossTradingDays)
+    const mergeAcrossTradingDay = (this.period.type === 'second' && this.mergeSecondAcrossTradingDay) || (this.period.type === 'minute' && this.mergeMinuteAcrossTradingDay) || (this.period.type === 'hour' && this.mergeHourAcrossTradingDay)
     if (this.sessions === undefined) {
-      if (!mergeAcrossTradingDays && (this.period.type === 'minute' || this.period.type === 'hour')) {
+      if (!mergeAcrossTradingDay && (this.period.type === 'second' || this.period.type === 'minute' || this.period.type === 'hour')) {
         return getIntradayPeriodStartWithinDay(timestamp, this.period, this.utcOffsetMinutes)
       }
       return getPeriodStart(timestamp, this.period, this.utcOffsetMinutes)
     }
 
-    const periodStart = getSessionPeriodStart(timestamp, this.period, this.utcOffsetMinutes, this.sessions, this.tradingCalendar, mergeAcrossTradingDays)
+    const periodStart = getSessionPeriodStart(timestamp, this.period, this.utcOffsetMinutes, this.sessions, this.tradingCalendar, mergeAcrossTradingDay)
     if (periodStart === undefined) {
       throw new RangeError('trade timestamp is outside the configured trading sessions')
     }
@@ -120,7 +123,7 @@ function getIntradayPeriodStartWithinDay(timestamp: number, period: Period, utcO
   const offset = utcOffsetMinutes * MINUTE
   const shiftedTimestamp = timestamp + offset
   const dayStart = Math.floor(shiftedTimestamp / DAY) * DAY
-  const duration = period.span * (period.type === 'hour' ? 60 * MINUTE : MINUTE)
+  const duration = period.span * (period.type === 'hour' ? 60 * MINUTE : period.type === 'minute' ? MINUTE : 1_000)
   return dayStart + Math.floor((shiftedTimestamp - dayStart) / duration) * duration - offset
 }
 

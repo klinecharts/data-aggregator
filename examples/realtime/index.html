@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Data Aggregator · 实时调试示例</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">KLINECHARTS LAB</p>
+          <h1>实时聚合调试台</h1>
+          <p class="subtitle">模拟逐笔成交，实时观察 OHLCV 数据的形成与闭合。</p>
+        </div>
+        <div class="live-indicator"><span></span><b id="status-text">运行中</b></div>
+      </header>
+
+      <section class="toolbar" aria-label="调试控制">
+        <div class="control-group">
+          <span>聚合周期</span>
+          <div class="period-input">
+            <label class="sr-only" for="period-span">周期数值</label>
+            <input id="period-span" type="number" min="1" step="1" value="5" inputmode="numeric" />
+            <label class="sr-only" for="period-unit">时间单位</label>
+            <select id="period-unit">
+              <option value="second">秒</option>
+              <option value="minute">分钟</option>
+              <option value="hour">小时</option>
+              <option value="day">日</option>
+              <option value="week">周</option>
+              <option value="month">月</option>
+              <option value="year">年</option>
+            </select>
+          </div>
+        </div>
+        <label>
+          播放速度
+          <select id="speed-select">
+            <option value="700">慢速</option>
+            <option value="300" selected>正常</option>
+            <option value="100">快速</option>
+          </select>
+        </label>
+        <div class="button-group">
+          <button id="toggle-button" class="primary" type="button">暂停</button>
+          <button id="step-button" type="button">单步成交</button>
+          <button id="reset-button" type="button">重置</button>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="当前 K 线">
+        <article><span>最新价</span><strong id="last-price">—</strong></article>
+        <article><span>开盘</span><strong id="open-price">—</strong></article>
+        <article><span>最高</span><strong id="high-price">—</strong></article>
+        <article><span>最低</span><strong id="low-price">—</strong></article>
+        <article><span>成交量</span><strong id="volume">—</strong></article>
+      </section>
+
+      <div class="detail-grid">
+        <section class="panel">
+          <div class="panel-heading">
+            <div><h2>最近聚合结果</h2><p>形成中的数据标记为 CURRENT</p></div>
+            <code id="virtual-time">—</code>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>时间</th><th>状态</th><th>O</th><th>H</th><th>L</th><th>C</th><th>Volume</th></tr></thead>
+              <tbody id="candle-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel trade-panel">
+          <div class="panel-heading"><div><h2>最新逐笔成交</h2><p>可在 <code>main.ts</code> 的 <code>pushTrade()</code> 中打断点</p></div></div>
+          <pre id="trade-json">等待成交…</pre>
+          <p class="source-hint">页面直接引用 <code>../../src</code>，修改聚合器源码后会自动热更新。</p>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

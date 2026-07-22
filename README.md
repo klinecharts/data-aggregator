@@ -67,6 +67,24 @@ Monday.
 Trades must be added in timestamp order. Missing periods are not filled with
 synthetic K-lines.
 
+## 24/7 trading
+
+Omit `sessions` for a market that trades continuously. The local trading-day
+boundary is defined by `utcOffsetMinutes`. The second, minute, and hour merge
+options also apply to 24/7 trading:
+
+```ts
+const aggregator = new DataAggregator({
+  utcOffsetMinutes: 0,
+  mergeSecondAcrossTradingDay: true,
+  mergeMinuteAcrossTradingDay: true,
+  mergeHourAcrossTradingDay: true,
+});
+```
+
+When an option is `false`, that period is truncated at local midnight. When it
+is `true`, the period can continue across midnight without interruption.
+
 ## Trading sessions
 
 Use `sessions` for markets with a midday break or other discontinuous trading
@@ -75,8 +93,9 @@ hours. Session times use the local clock defined by `utcOffsetMinutes`.
 ```ts
 const aggregator = new DataAggregator({
   utcOffsetMinutes: 8 * 60,
-  mergeMinuteKLinesAcrossTradingDays: false,
-  mergeHourKLinesAcrossTradingDays: false,
+  mergeSecondAcrossTradingDay: false,
+  mergeMinuteAcrossTradingDay: false,
+  mergeHourAcrossTradingDay: false,
   sessions: [
     { start: "09:30", end: "11:30" },
     { start: "13:00", end: "15:00" },
@@ -85,12 +104,14 @@ const aggregator = new DataAggregator({
 aggregator.setPeriod({ type: "hour", span: 1 });
 ```
 
-By default, minute and hour K-lines do not cross a trading-day boundary. If the
-remaining trading time is shorter than the configured period, that shorter
-K-line is treated as complete. Enable `mergeMinuteKLinesAcrossTradingDays` or
-`mergeHourKLinesAcrossTradingDays` to continue it with effective trading time
+By default, second, minute, and hour K-lines do not cross a trading-day
+boundary. If the remaining trading time is shorter than the configured period,
+that shorter K-line is treated as complete. Enable
+`mergeSecondAcrossTradingDay`,
+`mergeMinuteAcrossTradingDay`, or
+`mergeHourAcrossTradingDay` to continue it with effective trading time
 from later trading days. Breaks, weekends, and holidays do not count toward the
-period duration. The two settings are independent and default to `false`.
+period duration. The three settings are independent and default to `false`.
 
 No synthetic K-lines are created during a break, and trades outside the
 configured sessions are rejected. Use an end time earlier than the start time
@@ -125,6 +146,25 @@ same local time zone as the configured sessions.
 
 ```bash
 bun install
+bun run dev
+```
+
+Open the URL printed in the terminal to use the real-time aggregation example.
+It continuously generates trades, displays the current and closed K-lines, and
+provides pause, single-step, reset, playback-speed controls, plus an editable
+period amount and selectable time unit. The example imports directly from
+`src`, so source and example changes are hot reloaded by Bun.
+
+The example source is under `examples/realtime`. Run tests continuously while
+developing with:
+
+```bash
+bun run test:watch
+```
+
+Other development checks remain available separately:
+
+```bash
 bun run check
 bun run format
 bun run build

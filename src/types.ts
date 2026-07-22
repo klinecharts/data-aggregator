@@ -51,10 +51,12 @@ export interface TradingCalendar {
 export interface DataAggregatorOptions {
   /** Fixed offset from UTC in minutes. Defaults to UTC. */
   utcOffsetMinutes?: number
+  /** Continue second K-lines with trading time from later trading days. Defaults to false. */
+  mergeSecondAcrossTradingDay?: boolean
   /** Continue minute K-lines with trading time from later trading days. Defaults to false. */
-  mergeMinuteKLinesAcrossTradingDays?: boolean
+  mergeMinuteAcrossTradingDay?: boolean
   /** Continue hour K-lines with trading time from later trading days. Defaults to false. */
-  mergeHourKLinesAcrossTradingDays?: boolean
+  mergeHourAcrossTradingDay?: boolean
   /** Local trading sessions. Trades outside these intervals are rejected. */
   sessions?: readonly TradingSession[]
   /** Trading-day rules used with sessions. */

@@ -9,6 +9,50 @@ function createAggregator(period: Period, options?: DataAggregatorOptions): Data
 }
 
 describe('DataAggregator', () => {
+  test('aggregates trades into second K-lines', () => {
+    const aggregator = createAggregator({ type: 'second', span: 15 })
+    const start = Date.UTC(2026, 6, 21, 10)
+
+    aggregator.add({ timestamp: start + 1_000, price: 10, volume: 1 })
+    const current = aggregator.add({ timestamp: start + 14_999, price: 11, volume: 2 })
+    const next = aggregator.add({ timestamp: start + 15_000, price: 12, volume: 3 })
+
+    expect(current.current.timestamp).toBe(start)
+    expect(current.current.volume).toBe(3)
+    expect(next.closed).toEqual(current.current)
+    expect(next.current.timestamp).toBe(start + 15_000)
+  })
+
+  test('aligns second K-lines from the start of a trading session', () => {
+    const aggregator = createAggregator({ type: 'second', span: 7 }, { sessions: [{ start: '09:30', end: '11:30' }] })
+    const sessionOpen = Date.UTC(2026, 6, 21, 9, 30)
+
+    const result = aggregator.add({ timestamp: sessionOpen + 8_000, price: 10, volume: 1 })
+
+    expect(result.current.timestamp).toBe(sessionOpen + 7_000)
+  })
+
+  test('controls cross-trading-day merging for second K-lines', () => {
+    const sessions = [{ start: '09:00', end: '09:04' }]
+    const separate = createAggregator({ type: 'second', span: 300 }, { mergeSecondAcrossTradingDay: false, sessions })
+    const merged = createAggregator({ type: 'second', span: 300 }, { mergeSecondAcrossTradingDay: true, sessions })
+    const thursdayOpen = Date.UTC(2026, 6, 23, 9)
+    const fridayOpen = Date.UTC(2026, 6, 24, 9)
+
+    separate.add({ timestamp: thursdayOpen + 30_000, price: 10, volume: 1 })
+    const separateNextDay = separate.add({ timestamp: fridayOpen + 30_000, price: 11, volume: 1 })
+    merged.add({ timestamp: thursdayOpen + 30_000, price: 10, volume: 1 })
+    const mergedNextDay = merged.add({ timestamp: fridayOpen + 30_000, price: 11, volume: 1 })
+    const mergedCompleted = merged.add({ timestamp: fridayOpen + 90_000, price: 12, volume: 1 })
+
+    expect(separateNextDay.closed?.timestamp).toBe(thursdayOpen)
+    expect(separateNextDay.current.timestamp).toBe(fridayOpen)
+    expect(mergedNextDay.closed).toBeUndefined()
+    expect(mergedNextDay.current.timestamp).toBe(thursdayOpen)
+    expect(mergedCompleted.closed?.timestamp).toBe(thursdayOpen)
+    expect(mergedCompleted.current.timestamp).toBe(fridayOpen + 60_000)
+  })
+
   test('aggregates trades into OHLCV data', () => {
     const aggregator = createAggregator({ type: 'minute', span: 1 })
     const start = Date.UTC(2026, 6, 21, 10, 0)
@@ -105,7 +149,7 @@ describe('DataAggregator', () => {
     const aggregator = createAggregator(
       { type: 'hour', span: 5 },
       {
-        mergeHourKLinesAcrossTradingDays: false,
+        mergeHourAcrossTradingDay: false,
         sessions: [{ start: '09:00', end: '13:00' }]
       }
     )
@@ -132,11 +176,36 @@ describe('DataAggregator', () => {
     expect(result.current.timestamp).toBe(dayStart + 24 * 60 * 60_000)
   })
 
+  test('supports all cross-trading-day options for 24/7 trading', () => {
+    const dayStart = Date.UTC(2026, 6, 23)
+    const beforeMidnight = dayStart + 23.5 * 60 * 60_000
+    const afterMidnight = dayStart + 24.5 * 60 * 60_000
+    const cases = [
+      { period: { type: 'second', span: 5 * 60 * 60 } as const, option: 'mergeSecondAcrossTradingDay' as const },
+      { period: { type: 'minute', span: 5 * 60 } as const, option: 'mergeMinuteAcrossTradingDay' as const },
+      { period: { type: 'hour', span: 5 } as const, option: 'mergeHourAcrossTradingDay' as const }
+    ]
+
+    for (const { period, option } of cases) {
+      const separate = createAggregator(period, { [option]: false })
+      const merged = createAggregator(period, { [option]: true })
+      separate.add({ timestamp: beforeMidnight, price: 10, volume: 1 })
+      merged.add({ timestamp: beforeMidnight, price: 10, volume: 1 })
+
+      const separateAfterMidnight = separate.add({ timestamp: afterMidnight, price: 11, volume: 1 })
+      const mergedAfterMidnight = merged.add({ timestamp: afterMidnight, price: 11, volume: 1 })
+
+      expect(separateAfterMidnight.closed).toBeDefined()
+      expect(mergedAfterMidnight.closed).toBeUndefined()
+      expect(mergedAfterMidnight.current.timestamp).toBe(dayStart + 22 * 60 * 60_000)
+    }
+  })
+
   test('continues an hour K-line with trading time from the next trading day', () => {
     const aggregator = createAggregator(
       { type: 'hour', span: 5 },
       {
-        mergeHourKLinesAcrossTradingDays: true,
+        mergeHourAcrossTradingDay: true,
         sessions: [{ start: '09:00', end: '13:00' }]
       }
     )
@@ -157,8 +226,8 @@ describe('DataAggregator', () => {
 
   test('controls cross-trading-day merging independently for minute K-lines', () => {
     const options = {
-      mergeMinuteKLinesAcrossTradingDays: true,
-      mergeHourKLinesAcrossTradingDays: false,
+      mergeMinuteAcrossTradingDay: true,
+      mergeHourAcrossTradingDay: false,
       sessions: [{ start: '09:00', end: '13:00' }]
     }
     const aggregator = createAggregator({ type: 'minute', span: 300 }, options)
@@ -176,7 +245,7 @@ describe('DataAggregator', () => {
     const aggregator = createAggregator(
       { type: 'hour', span: 5 },
       {
-        mergeHourKLinesAcrossTradingDays: true,
+        mergeHourAcrossTradingDay: true,
         sessions: [{ start: '09:00', end: '13:00' }],
         tradingCalendar: { holidays: ['2026-07-24'] }
       }
@@ -311,7 +380,7 @@ describe('DataAggregator', () => {
     ).toThrow('overlap')
     expect(() => createAggregator({ type: 'minute', span: 1 }, { sessions: [{ start: '09:00', end: '15:00' }], tradingCalendar: { holidays: ['2026-02-30'] } })).toThrow('valid dates')
     expect(() => createAggregator({ type: 'minute', span: 1 }, { tradingCalendar: { holidays: ['2026-07-20'] } })).toThrow('requires sessions')
-    expect(() => new DataAggregator({ mergeHourKLinesAcrossTradingDays: 1 as never })).toThrow('must be a boolean')
+    expect(() => new DataAggregator({ mergeHourAcrossTradingDay: 1 as never })).toThrow('must be a boolean')
   })
 
   test('returns snapshots that cannot mutate internal state', () => {

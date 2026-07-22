@@ -1,5 +1,5 @@
-import { getPeriodStart } from './period.js'
-import type { Period, TradingCalendar, TradingSession } from './types.js'
+import { getPeriodStart } from './period'
+import type { Period, TradingCalendar, TradingSession } from './types'
 
 const MINUTE = 60_000
 const DAY = 24 * 60 * MINUTE
@@ -68,7 +68,7 @@ export function normalizeTradingSessions(sessions: readonly TradingSession[]): r
   return normalized
 }
 
-export function getSessionPeriodStart(timestamp: number, period: Period, utcOffsetMinutes: number, sessions: readonly NormalizedTradingSession[], calendar: NormalizedTradingCalendar, mergeAcrossTradingDays = false): number | undefined {
+export function getSessionPeriodStart(timestamp: number, period: Period, utcOffsetMinutes: number, sessions: readonly NormalizedTradingSession[], calendar: NormalizedTradingCalendar, mergeAcrossTradingDay = false): number | undefined {
   const occurrence = findSessionOccurrence(timestamp, utcOffsetMinutes, sessions, calendar)
   if (occurrence === undefined) {
     return undefined
@@ -80,14 +80,10 @@ export function getSessionPeriodStart(timestamp: number, period: Period, utcOffs
   }
 
   const duration = baseDuration * period.span
-  if (period.type === 'second') {
-    return occurrence.start + Math.floor((timestamp - occurrence.start) / duration) * duration
-  }
-
   const position = getTradingTimePosition(timestamp, occurrence, utcOffsetMinutes, sessions, calendar)
-  const coordinate = mergeAcrossTradingDays ? position.coordinate : position.elapsedInTradingDay
+  const coordinate = mergeAcrossTradingDay ? position.coordinate : position.elapsedInTradingDay
   const periodCoordinate = Math.floor(coordinate / duration) * duration
-  const absolutePeriodCoordinate = mergeAcrossTradingDays ? periodCoordinate : position.tradingDayOrdinal * getTradingDayDuration(sessions) + periodCoordinate
+  const absolutePeriodCoordinate = mergeAcrossTradingDay ? periodCoordinate : position.tradingDayOrdinal * getTradingDayDuration(sessions) + periodCoordinate
   return tradingTimeCoordinateToTimestamp(absolutePeriodCoordinate, position, utcOffsetMinutes, sessions, calendar)
 }
 
