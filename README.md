@@ -174,3 +174,6 @@ bun run check
 bun run format
 bun run build
 ```
+
+## License
+Apache License V2.
