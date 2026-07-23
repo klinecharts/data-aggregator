@@ -37,18 +37,46 @@
           </div>
         </div>
         <label>
-          播放速度
-          <select id="speed-select">
-            <option value="700">慢速</option>
-            <option value="300" selected>正常</option>
-            <option value="100">快速</option>
-          </select>
+          开始时间
+          <input id="start-time" class="start-time-input" type="datetime-local" step="1" required />
+        </label>
+        <label>
+          成交间隔（毫秒）
+          <input id="trade-interval" type="number" min="1" max="60000" step="1" value="300" required />
         </label>
         <div class="button-group">
           <button id="toggle-button" class="primary" type="button">暂停</button>
           <button id="step-button" type="button">单步成交</button>
-          <button id="reset-button" type="button">重置</button>
+          <button id="next-period-button" type="button">下一个周期</button>
+          <button id="reset-button" type="button">应用并重置</button>
         </div>
+      </section>
+
+      <section class="panel config-panel" aria-labelledby="aggregator-config-title">
+        <div class="panel-heading">
+          <div><h2 id="aggregator-config-title">聚合器配置</h2><p>修改后将使用新配置重新开始模拟</p></div>
+        </div>
+        <div class="config-grid">
+          <label>
+            utcOffsetMinutes
+            <input id="utc-offset-minutes" type="number" step="1" value="480" required />
+          </label>
+          <fieldset class="merge-options">
+            <legend>跨交易日合并</legend>
+            <label class="check-option"><input id="merge-second" type="checkbox" />mergeSecondAcrossTradingDay</label>
+            <label class="check-option"><input id="merge-minute" type="checkbox" />mergeMinuteAcrossTradingDay</label>
+            <label class="check-option"><input id="merge-hour" type="checkbox" />mergeHourAcrossTradingDay</label>
+          </fieldset>
+          <label class="json-field">
+            sessions（JSON，留空表示 24/7）
+            <textarea id="sessions" rows="5" spellcheck="false" placeholder='[{"start":"09:30","end":"11:30"},{"start":"13:00","end":"15:00"}]'></textarea>
+          </label>
+          <label class="json-field">
+            tradingCalendar（JSON，需配合 sessions）
+            <textarea id="trading-calendar" rows="5" spellcheck="false" placeholder='{"holidays":["2026-01-01"],"extraTradingDays":[],"weekendDays":[0,6]}'></textarea>
+          </label>
+        </div>
+        <p id="config-error" class="config-error" role="alert" hidden></p>
       </section>
 
       <section class="metrics" aria-label="当前 K 线">
