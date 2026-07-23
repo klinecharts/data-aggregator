@@ -1,7 +1,7 @@
 {
   "name": "@klinecharts/data-aggregator",
-  "version": "0.0.0",
-  "description": "Data aggregation utilities for KLineCharts.",
+  "version": "0.1.0",
+  "description": "Aggregate real-time transaction data into candlestick data.",
   "keywords": [
     "candlestick",
     "kline",

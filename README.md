@@ -1,7 +1,6 @@
 # @klinecharts/data-aggregator
 
-Aggregate real-time trades into K-line (candlestick) data compatible with
-KLineCharts.
+Aggregate real-time transaction data into candlestick data.
 
 ## Install
 
