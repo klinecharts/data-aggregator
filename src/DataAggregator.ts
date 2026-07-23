@@ -1,12 +1,12 @@
 import { getPeriodStart, validatePeriod, validateUtcOffset } from './period'
 import type { NormalizedTradingCalendar, NormalizedTradingSession } from './sessions'
 import { getSessionPeriodStart, normalizeTradingCalendar, normalizeTradingSessions } from './sessions'
-import type { AggregationResult, KLineData, Period, RealtimeDataAggregatorOptions, TradeData } from './types'
+import type { AggregationResult, DataAggregatorOptions, KLineData, Period, TradeData } from './types'
 
 const MINUTE = 60_000
 const DAY = 24 * 60 * MINUTE
 
-export class RealtimeDataAggregator {
+export class DataAggregator {
   private period: Period | undefined
   private readonly utcOffsetMinutes: number
   private readonly mergeSecondAcrossTradingDay: boolean
@@ -17,7 +17,7 @@ export class RealtimeDataAggregator {
   private currentData: KLineData | undefined
   private lastTradeTimestamp: number | undefined
 
-  constructor(options: RealtimeDataAggregatorOptions = {}) {
+  constructor(options: DataAggregatorOptions = {}) {
     const utcOffsetMinutes = options.utcOffsetMinutes ?? 0
     validateUtcOffset(utcOffsetMinutes)
     validateBooleanOption(options.mergeSecondAcrossTradingDay, 'mergeSecondAcrossTradingDay')

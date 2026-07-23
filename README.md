@@ -6,15 +6,15 @@ KLineCharts.
 ## Install
 
 ```bash
-bun add @klinecharts/data-aggregator
+npm install @klinecharts/data-aggregator
 ```
 
 ## Usage
 
 ```ts
-import { RealtimeDataAggregator } from "@klinecharts/data-aggregator";
+import { DataAggregator } from "@klinecharts/data-aggregator";
 
-const aggregator = new RealtimeDataAggregator({ utcOffsetMinutes: 8 * 60 });
+const aggregator = new DataAggregator({ utcOffsetMinutes: 8 * 60 });
 aggregator.setPeriod({ type: "minute", span: 5 });
 
 const result = aggregator.add({
@@ -41,7 +41,7 @@ The supported period types are `second`, `minute`, `hour`, `day`, `week`,
 `month`, and `year`. `span` must be a positive integer.
 
 ```ts
-const aggregator = new RealtimeDataAggregator();
+const aggregator = new DataAggregator();
 aggregator.setPeriod({ type: "second", span: 15 });
 aggregator.setPeriod({ type: "hour", span: 4 });
 aggregator.setPeriod({ type: "month", span: 1 });
@@ -74,7 +74,7 @@ boundary is defined by `utcOffsetMinutes`. The second, minute, and hour merge
 options also apply to 24/7 trading:
 
 ```ts
-const aggregator = new RealtimeDataAggregator({
+const aggregator = new DataAggregator({
   utcOffsetMinutes: 0,
   mergeSecondAcrossTradingDay: true,
   mergeMinuteAcrossTradingDay: true,
@@ -91,7 +91,7 @@ Use `sessions` for markets with a midday break or other discontinuous trading
 hours. Session times use the local clock defined by `utcOffsetMinutes`.
 
 ```ts
-const aggregator = new RealtimeDataAggregator({
+const aggregator = new DataAggregator({
   utcOffsetMinutes: 8 * 60,
   mergeSecondAcrossTradingDay: false,
   mergeMinuteAcrossTradingDay: false,
@@ -125,7 +125,7 @@ as local calendar dates; an overnight session is assigned to the next available
 trading day after weekends and holidays.
 
 ```ts
-const aggregator = new RealtimeDataAggregator({
+const aggregator = new DataAggregator({
   sessions: [
     { start: "21:00", end: "02:00" },
     { start: "09:00", end: "15:00" },
@@ -154,14 +154,14 @@ It continuously generates trades, displays the current and closed K-lines, and
 provides pause, single-step, next-period, and reset controls, plus an editable
 period amount, selectable time unit, configurable simulation start time, and
 trade interval in milliseconds. The example
-also exposes every `RealtimeDataAggregator` option: `utcOffsetMinutes`, the
+also exposes every `DataAggregator` option: `utcOffsetMinutes`, the
 three cross-trading-day merge flags, `sessions`, and `tradingCalendar`.
 Structured options are entered as JSON. The example imports directly from
 `src`, so source and example changes are hot reloaded by Bun. The period, start
 time, and aggregator options are cached in browser storage and restored on the
 next visit.
 
-The example source is under `examples/realtime`. Run tests continuously while
+The example source is under `examples`. Run tests continuously while
 developing with:
 
 ```bash
@@ -174,11 +174,4 @@ Other development checks remain available separately:
 bun run check
 bun run format
 bun run build
-```
-
-The package is configured for public publishing under the `@klinecharts`
-scope:
-
-```bash
-bun publish
 ```

@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'bun:test'
-import { RealtimeDataAggregator } from './RealtimeDataAggregator'
-import type { Period, RealtimeDataAggregatorOptions } from './types'
+import { DataAggregator } from './DataAggregator'
+import type { DataAggregatorOptions, Period } from './types'
 
-function createAggregator(period: Period, options?: RealtimeDataAggregatorOptions): RealtimeDataAggregator {
-  const aggregator = new RealtimeDataAggregator(options)
+function createAggregator(period: Period, options?: DataAggregatorOptions): DataAggregator {
+  const aggregator = new DataAggregator(options)
   aggregator.setPeriod(period)
   return aggregator
 }
 
-describe('RealtimeDataAggregator', () => {
+describe('DataAggregator', () => {
   test('aggregates trades into second K-lines', () => {
     const aggregator = createAggregator({ type: 'second', span: 15 })
     const start = Date.UTC(2026, 6, 21, 10)
@@ -380,7 +380,7 @@ describe('RealtimeDataAggregator', () => {
     ).toThrow('overlap')
     expect(() => createAggregator({ type: 'minute', span: 1 }, { sessions: [{ start: '09:00', end: '15:00' }], tradingCalendar: { holidays: ['2026-02-30'] } })).toThrow('valid dates')
     expect(() => createAggregator({ type: 'minute', span: 1 }, { tradingCalendar: { holidays: ['2026-07-20'] } })).toThrow('requires sessions')
-    expect(() => new RealtimeDataAggregator({ mergeHourAcrossTradingDay: 1 as never })).toThrow('must be a boolean')
+    expect(() => new DataAggregator({ mergeHourAcrossTradingDay: 1 as never })).toThrow('must be a boolean')
   })
 
   test('returns snapshots that cannot mutate internal state', () => {
@@ -392,13 +392,13 @@ describe('RealtimeDataAggregator', () => {
   })
 
   test('requires a period before adding trades', () => {
-    const aggregator = new RealtimeDataAggregator()
+    const aggregator = new DataAggregator()
 
     expect(() => aggregator.add({ timestamp: 0, price: 10, volume: 1 })).toThrow('period must be set')
   })
 
   test('continues aggregating from an unclosed base K-line', () => {
-    const aggregator = new RealtimeDataAggregator()
+    const aggregator = new DataAggregator()
     const start = Date.UTC(2026, 6, 21, 10)
     aggregator.setPeriod({ type: 'minute', span: 1 })
     aggregator.setBaseData({
@@ -428,7 +428,7 @@ describe('RealtimeDataAggregator', () => {
   })
 
   test('copies base data and clears it when the period changes', () => {
-    const aggregator = new RealtimeDataAggregator()
+    const aggregator = new DataAggregator()
     aggregator.setPeriod({ type: 'minute', span: 1 })
     const base = { timestamp: 0, open: 10, high: 10, low: 10, close: 10, volume: 1, turnover: 10 }
     aggregator.setBaseData(base)
@@ -440,7 +440,7 @@ describe('RealtimeDataAggregator', () => {
   })
 
   test('resumes an overnight trading day whose session starts before its K-line timestamp', () => {
-    const aggregator = new RealtimeDataAggregator({
+    const aggregator = new DataAggregator({
       utcOffsetMinutes: 8 * 60,
       sessions: [
         { start: '21:00', end: '02:00' },
@@ -467,7 +467,7 @@ describe('RealtimeDataAggregator', () => {
   })
 
   test('validates base K-line data', () => {
-    const aggregator = new RealtimeDataAggregator()
+    const aggregator = new DataAggregator()
     const base = { timestamp: 0, open: 10, high: 10, low: 10, close: 10, volume: 1, turnover: 10 }
 
     expect(() => aggregator.setBaseData(base)).toThrow('period must be set')

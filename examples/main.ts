@@ -1,5 +1,5 @@
-import type { AggregationResult, KLineData, Period, RealtimeDataAggregatorOptions, TradingCalendar, TradingSession } from '../../src'
-import { RealtimeDataAggregator } from '../../src'
+import type { AggregationResult, DataAggregatorOptions, KLineData, Period, TradingCalendar, TradingSession } from '../src'
+import { DataAggregator } from '../src'
 
 const periodSpan = element<HTMLInputElement>('period-span')
 const periodUnit = element<HTMLSelectElement>('period-unit')
@@ -37,7 +37,7 @@ interface CachedConfiguration {
   tradingCalendar: string
 }
 
-const configurationCacheKey = '@klinecharts/data-aggregator:realtime-example:v1'
+const configurationCacheKey = '@klinecharts/data-aggregator:example:v1'
 const maximumHistorySize = 10
 const minuteMilliseconds = 60_000
 const dayMilliseconds = 24 * 60 * minuteMilliseconds
@@ -66,7 +66,7 @@ function selectedPeriod(): Period {
   }
 }
 
-function initializeAggregator(): RealtimeDataAggregator {
+function initializeAggregator(): DataAggregator {
   restoreConfiguration()
   try {
     return createAggregator()
@@ -170,8 +170,8 @@ function isCachedConfiguration(value: unknown): value is CachedConfiguration {
   )
 }
 
-function createAggregator(): RealtimeDataAggregator {
-  const options: RealtimeDataAggregatorOptions = {
+function createAggregator(): DataAggregator {
+  const options: DataAggregatorOptions = {
     utcOffsetMinutes: Number(utcOffsetInput.value),
     mergeSecondAcrossTradingDay: mergeSecondInput.checked,
     mergeMinuteAcrossTradingDay: mergeMinuteInput.checked,
@@ -185,7 +185,7 @@ function createAggregator(): RealtimeDataAggregator {
   if (tradingCalendar !== undefined) {
     options.tradingCalendar = tradingCalendar
   }
-  const value = new RealtimeDataAggregator(options)
+  const value = new DataAggregator(options)
   value.setPeriod(selectedPeriod())
   return value
 }
@@ -216,7 +216,7 @@ function pushTrade(timestamp = virtualTime + 1_000): void {
   render()
 }
 
-function reset(nextAggregator: RealtimeDataAggregator = createAggregator()): void {
+function reset(nextAggregator: DataAggregator = createAggregator()): void {
   stopTimer()
   closedCandles = []
   currentCandle = undefined

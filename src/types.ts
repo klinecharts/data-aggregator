@@ -48,7 +48,7 @@ export interface TradingCalendar {
   weekendDays?: readonly number[]
 }
 
-export interface RealtimeDataAggregatorOptions {
+export interface DataAggregatorOptions {
   /** Fixed offset from UTC in minutes. Defaults to UTC. */
   utcOffsetMinutes?: number
   /** Continue second K-lines with trading time from later trading days. Defaults to false. */
