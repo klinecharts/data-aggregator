@@ -8,6 +8,7 @@ Aggregate real-time transaction data into candlestick data.
 npm install @klinecharts/data-aggregator
 ```
 
+You can use `pnpm`, `yarn`, or `bun` instead of npm.
 ## Usage
 
 ```ts
@@ -176,4 +177,4 @@ bun run build
 ```
 
 ## License
-Apache License V2.
+[Apache License 2.0](./LICENSE)

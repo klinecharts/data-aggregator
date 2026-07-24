@@ -21,9 +21,12 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "sideEffects": false,
+  "license": "Apache-2.0",
   "scripts": {
     "biome:check": "biome check .",
     "build": "bun run scripts/build.ts",
